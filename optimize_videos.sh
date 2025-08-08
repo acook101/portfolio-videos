@@ -1,7 +1,17 @@
 #!/bin/bash
 
 # Video optimization script for portfolio videos
-# Target specs: 1-3MB, 3-10 seconds, 720p max, WebM + MP4
+# Target specs: 1-3MB, 720p max, WebM + MP4 (optional trimming)
+
+# Optional: set via --max-seconds N to trim, otherwise preserve full duration
+MAX_SECONDS=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --max-seconds) MAX_SECONDS="$2"; shift 2 ;;
+    --max-seconds=*) MAX_SECONDS="${1#*=}"; shift ;;
+    *) shift ;;
+  esac
+done
 
 echo "🎬 Starting video optimization process..."
 
@@ -27,11 +37,13 @@ optimize_video() {
     
     echo "   Duration: ${duration_int}s"
     
-    # If video is longer than 10 seconds, we'll trim it to 10 seconds
+    # Optional trimming only when --max-seconds is provided
     trim_option=""
-    if (( duration_int > 10 )); then
-        trim_option="-t 10"
-        echo "   ⚠️  Video longer than 10s, trimming to 10s"
+    if [[ -n "$MAX_SECONDS" ]] && (( duration_int > MAX_SECONDS )); then
+        trim_option="-t $MAX_SECONDS"
+        echo "   ⏱ Trimming to ${MAX_SECONDS}s"
+    else
+        echo "   Preserving full duration"
     fi
     
     # Create WebM version (VP9 codec for better compression)
